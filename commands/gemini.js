@@ -2,7 +2,7 @@ const axios = require("axios");
 const { sendMessage } = require('../handles/sendMessage');
 
 const GEMINI_API_URL = "https://kaiz-apis.gleeze.com/api/gemini-vision";
-const API_KEY = "GET YOUR API KEY > https://kaiz-apid.gleeze.com";
+const API_KEY = "4eb61ecf-4ec4-4b50-a10a-9e81a4b8f37a";
 
 const fontMapping = {
   'A': '𝗔', 'B': '𝗕', 'C': '𝗖', 'D': '𝗗', 'E': '𝗘', 'F': '𝗙', 'G': '𝗚',

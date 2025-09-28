@@ -1,61 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Server Activated</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #667eea, #764ba2);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      font-size: 1.2rem;
-      margin: 0;
-    }
-
-    .container {
-      background-color: rgba(0, 0, 0, 0.4);
-      padding: 30px 50px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      max-width: 600px;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 20px;
-        width: 90%;
-      }
-
-      h1 {
-        font-size: 2rem;
-      }
-
-      p {
-        font-size: 1rem;
-      }
-    }
-  </style>
+  <meta charset="utf-8" />
+  <title>Live Console - Capstone UI</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="container">
-    <h1>🚀 Pagebot has been activated </h1>
-    <p>Uptime URL through uptime.betterstack.com</p>
-  </div>
+<body class="bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 font-inter min-h-screen flex flex-col">
+
+  <header class="flex items-center gap-4 px-6 py-4 bg-white/5 backdrop-blur-lg border-b border-white/10 shadow-lg rounded-b-2xl">
+    <h1 class="text-lg font-semibold tracking-wide">📊 Pagebot Console</h1>
+    <div id="status" class="ml-auto text-sm text-slate-400">Connecting…</div>
+  </header>
+
+  <main id="main" class="flex-1 flex flex-col gap-4 p-6">
+    <section id="controlsPanel" class="p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl">
+      <div class="flex gap-3 mb-4">
+        <button id="clearBtn" class="flex-1 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm transition">🧹 Clear</button>
+        <button id="pauseBtn" class="flex-1 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm transition">⏸ Pause</button>
+        <button id="downloadBtn" class="flex-1 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm transition">⬇️ Download</button>
+      </div>
+      <input id="filter" type="text" placeholder="🔍 Filter logs (info / success / warn / error)"
+        class="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm placeholder-slate-400 focus:ring-2 focus:ring-cyan-400 focus:outline-none" />
+      <p class="text-xs text-slate-400 mt-2">Showing last <span id="count">0</span> entries</p>
+    </section>
+
+    <section id="right" class="flex flex-col flex-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+      <div id="logContainer" class="flex-1 overflow-y-auto p-6 space-y-4 text-sm"></div>
+      <footer class="px-6 py-3 text-xs text-slate-400 border-t border-white/10 bg-black/10">
+        ⚡ Live stream via SSE • Uptime: <span id="uptime">—</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const logContainer = document.getElementById('logContainer');
+    const countEl = document.getElementById('count');
+    const filterInput = document.getElementById('filter');
+    const clearBtn = document.getElementById('clearBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const uptimeEl = document.getElementById('uptime');
+
+    let paused = false;
+    let entries = [];
+
+    function render() {
+      const q = filterInput.value.trim().toLowerCase();
+      const items = entries.filter(e => {
+        if (!q) return true;
+        if (['info','success','warn','error'].includes(q)) return e.type === q;
+        return (e.text + ' ' + e.time + ' ' + e.type).toLowerCase().includes(q);
+      });
+      logContainer.innerHTML = items.map(e => {
+        const cls = {
+          info: "bg-cyan-500/10 border-cyan-400/30 text-cyan-300",
+          success: "bg-green-500/10 border-green-400/30 text-green-300",
+          warn: "bg-yellow-500/10 border-yellow-400/30 text-yellow-300",
+          error: "bg-red-500/10 border-red-400/30 text-red-300"
+        }[e.type] || "bg-cyan-500/10 border-cyan-400/30 text-cyan-300";
+        const meta = `${e.time} • ${e.type.toUpperCase()}`;
+        return `<div class="p-4 rounded-xl border ${cls} shadow-md">
+                  <div class="text-xs opacity-75 mb-1">${meta}</div>
+                  <div>${escapeHtml(e.text)}</div>
+                </div>`;
+      }).join('');
+      countEl.textContent = items.length;
+      if (!paused) logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+
+    clearBtn.addEventListener('click', ()=>{ entries = []; render(); });
+    pauseBtn.addEventListener('click', ()=>{ paused = !paused; pauseBtn.textContent = paused ? '▶️ Resume' : '⏸ Pause'; });
+    downloadBtn.addEventListener('click', ()=> {
+      const blob = new Blob([entries.map(e=>`${e.time} [${e.type.toUpperCase()}] ${e.text}`).join('\n')], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `logs-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.txt`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    filterInput.addEventListener('input', render);
+
+    const es = new EventSource('/events');
+    es.onopen = () => { statusEl.textContent = '✅ Connected'; statusEl.classList.add("text-green-400"); uptimeStart = Date.now(); startUptime(); };
+    es.onerror = () => { statusEl.textContent = '❌ Disconnected - retrying'; statusEl.classList.add("text-red-400"); };
+    es.onmessage = (evt) => {
+      try {
+        const data = JSON.parse(evt.data);
+        entries.push(data);
+        if (entries.length > 2000) entries.shift();
+        if (!paused) render();
+      } catch (e) {}
+    };
+
+    let uptimeStart = null;
+    function startUptime(){ setInterval(()=>{ if(!uptimeStart) return; const s=Math.floor((Date.now()-uptimeStart)/1000); const h=Math.floor(s/3600); const m=Math.floor((s%3600)/60); const ss=s%60; uptimeEl.textContent = `${h}h ${m}m ${ss}s`; },1000); }
+
+    render();
+  </script>
 </body>
 </html>

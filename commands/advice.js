@@ -19,7 +19,7 @@ module.exports = {
   description: "Get a random piece of advice",
   usage: "say advice",
   category: "others",
-  author: "Tianji",
+  author: "Marjhun Baylon",
   async execute(senderId, args, pageAccessToken) {
     await sendMessage(senderId, {
       text: formatFont("⌛ Fetching a piece of advice...")
