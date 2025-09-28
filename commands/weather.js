@@ -22,7 +22,7 @@ module.exports = {
     }, pageAccessToken);
 
     try {
-      const response = await axios.get(`https://kaiz-apis.gleeze.com/api/weather?q=${encodeURIComponent(location)}&apikey=GET YOUR APIKEY > https://kaiz-apis.gleeze.com/`);
+      const response = await axios.get(`https://kaiz-apis.gleeze.com/api/weather?q=${encodeURIComponent(location)}&apikey=4eb61ecf-4ec4-4b50-a10a-9e81a4b8f37a`);
       const data = response.data["0"];
 
       if (!data || !data.current) {
