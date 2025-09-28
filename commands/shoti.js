@@ -5,7 +5,7 @@ module.exports = {
   name: 'waifu',
   description: 'Get a random waifu image.',
   usage: 'waifu',
-  author: 'Marjhun Baylon',
+  author: 'Marjhun Baylons',
   category: 'images',
 
   async execute(senderId, args, pageAccessToken) {
